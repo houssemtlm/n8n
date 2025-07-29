@@ -17,6 +17,8 @@ import { BaseCommand } from './base-command';
 
 import { ActiveExecutions } from '@/active-executions';
 import { ActiveWorkflowManager } from '@/active-workflow-manager';
+import { AuthRolesService } from '@/auth/auth.roles.service';
+import { CommunityPackagesConfig } from '@/community-packages/community-packages.config';
 import config from '@/config';
 import { EDITOR_UI_DIST_DIR } from '@/constants';
 import { FeatureNotLicensedError } from '@/errors/feature-not-licensed.error';
@@ -33,7 +35,6 @@ import { ExecutionsPruningService } from '@/services/pruning/executions-pruning.
 import { UrlService } from '@/services/url.service';
 import { WaitTracker } from '@/wait-tracker';
 import { WorkflowRunner } from '@/workflow-runner';
-import { CommunityPackagesConfig } from '@/community-packages/community-packages.config';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const open = require('open');
@@ -199,6 +200,9 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 		}
 
 		await super.init();
+
+		await Container.get(AuthRolesService).init();
+
 		this.activeWorkflowManager = Container.get(ActiveWorkflowManager);
 
 		const isMultiMainEnabled =
