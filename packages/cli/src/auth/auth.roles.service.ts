@@ -1,7 +1,13 @@
 import { Logger } from '@n8n/backend-common';
 import { RoleRepository, Scope, ScopeRepository } from '@n8n/db';
 import { Service } from '@n8n/di';
-import { ALL_SCOPES, ALL_ROLES, scopeInformation } from '@n8n/permissions';
+import {
+	ALL_SCOPES,
+	ALL_ROLES,
+	scopeInformation,
+	Scope as PermissionScope,
+	Resource,
+} from '@n8n/permissions';
 
 @Service()
 export class AuthRolesService {
@@ -126,5 +132,23 @@ export class AuthRolesService {
 		await this.syncScopes();
 		await this.syncRoles();
 		this.logger.info('AuthRolesService initialized successfully.');
+	}
+
+	async getRoleScopes(roleSlug: string, filters?: Resource[]): Promise<PermissionScope[]> {
+		const role = await this.roleRepository.findOne({
+			where: { slug: roleSlug },
+			relations: ['scopes'],
+		});
+
+		if (!role) {
+			this.logger.warn(`Role with slug ${roleSlug} not found.`);
+			return [];
+		}
+
+		return role.scopes
+			.map((scope) => scope.slug)
+			.filter((scope) => {
+				return !filters || filters.includes(scope.split(':')[0] as Resource);
+			});
 	}
 }
